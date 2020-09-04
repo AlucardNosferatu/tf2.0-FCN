@@ -41,7 +41,12 @@ def build_model():
 
 def train_model():
     if os.path.exists('models/initial.h5'):
-        model = tf.keras.models.load_model('models/initial.h5')
+        model = tf.keras.models.load_model(
+            'models/initial.h5',
+            custom_objects={
+                'softmax_cross_entropy_with_logits_v2':tf.compat.v2.nn.softmax_cross_entropy_with_logits
+            }
+        )
     else:
         model = build_model()
     checkpoint = tf.keras.callbacks.ModelCheckpoint(

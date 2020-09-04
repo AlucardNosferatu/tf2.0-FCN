@@ -35,7 +35,6 @@ def test_generator():
 
 def handle_data(train_filenames, train_label_filenames=None):
     image = cv2.resize(cv2.imread(train_filenames), image_shape)
-
     image_yuv = cv2.cvtColor(image, cv2.COLOR_BGR2YUV)
     image_yuv[:, :, 0] = cv2.equalizeHist(image_yuv[:, :, 0])
     image = cv2.cvtColor(image_yuv, cv2.COLOR_YUV2RGB)

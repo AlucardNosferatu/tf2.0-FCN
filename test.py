@@ -2,13 +2,12 @@ import os
 
 import cv2
 import numpy as np
-import scipy
 import tensorflow as tf
 from PIL import Image
 
 from config import weight_path, image_shape, test_dir, result_path
-from dataload import test_generator
-from deeplab import DeepLabV3Plus
+from model import new_my_model
+from train import activate_growth
 
 COLORMAP = [[0, 0, 255], [0, 255, 0]]
 cm = np.array(COLORMAP).astype(np.uint8)
@@ -28,9 +27,8 @@ def addweight(pred, test_img):
     return image
 
 
-def write_pred(image, pred, x_names):
+def write_pred(image, pred):
     pred = pred[0]  # pred维度为[h, w, n_class]
-    x_name = x_names[0]
     pred = np.argmax(pred, axis=2)  # 获取通道的最大值的指数，比如模型输出某点的像素值为[0.1,0.5]，则该点的argmax为1.
     pred = cm[pred]  # 将预测结果的像素值改为cm定义的值，这是语义分割常用方法。这一步是为了将上一步的1转换为cm的第二个值，即[0,255,0]
 
@@ -40,35 +38,22 @@ def write_pred(image, pred, x_names):
     print(filename.split("/")[-1] + " finished")
 
 
-# def write_img(pred_images, filename):
+def load_model():
+    model = new_my_model(n_class=2)
+    model.load_weights(weight_path + 'fcn_20191021.ckpt')
+    return model
 
-#     pred = pred_images[0]
-#     COLORMAP = [[0, 0, 255], [0, 255, 0]]
-#     cm = np.array(COLORMAP).astype(np.uint8)
-
-#     pred = np.argmax(np.array(pred), axis=2)
-
-#     pred_val = cm[pred]
-#     cv2.imwrite(os.path.join("data",filename.split("/")[-1]), pred_val)
-#     print(os.path.join("data",filename.split("/")[-1])+"finished")
-
-
-test_dataset = tf.data.Dataset.from_generator(
-    test_generator, tf.float32, tf.TensorShape([None, None, None]))
-test_dataset = test_dataset.batch(5)
-
-model = DeepLabV3Plus(image_shape[0], image_shape[1], nclasses=2)
-# model = MyModel(2)
-model.load_weights(weight_path + 'fcn_20191021.ckpt')
 
 test_list_dir = os.listdir(test_dir)
 test_list_dir.sort()
 test_filenames = [test_dir + filename for filename in test_list_dir]
 
+activate_growth()
+model = load_model()
 for filename in test_filenames:
-    image = scipy.misc.imresize(
-        scipy.misc.imread(filename),
-        image_shape)  # image的维度为[h, w, channel], 下一步将其转换为[batch, h, w, channel]作为模型的输入, 这里batch=1。
+    image = cv2.resize(cv2.imread(filename), image_shape)
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     image = image[np.newaxis, :, :, :].astype("float32")
-    out = model.predict(image)  # out的维度为[batch, h, w, n_class]
-    write_pred(image, out, filename)
+    with tf.device('/gpu:0'):
+        out = model.predict(image)  # out的维度为[batch, h, w, n_class]
+        write_pred(image, out)
