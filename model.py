@@ -1,16 +1,18 @@
 import numpy as np
 import tensorflow as tf
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Conv2D, Conv2DTranspose, UpSampling2D
-from tensorflow.keras.layers import Dropout, Input
 from tensorflow.keras.initializers import Constant
-# from tensorflow.nn import conv2d_transpose
+from tensorflow.keras.layers import Conv2D, Conv2DTranspose
+from tensorflow.keras.layers import Input
+from tensorflow.keras import Model
 
 from config import image_shape
 
 
+# from tensorflow.nn import conv2d_transpose
+
+
 def bilinear_upsample_weights(factor, number_of_classes):
-    filter_size = factor*2 - factor % 2
+    filter_size = factor * 2 - factor % 2
     factor = (filter_size + 1) // 2
     if filter_size % 2 == 1:
         center = factor - 1
@@ -26,11 +28,10 @@ def bilinear_upsample_weights(factor, number_of_classes):
     return weights
 
 
-class MyModel(tf.keras.Model):
+class MyModel(Model):
     def __init__(self, n_class):
-        super().__init__()
+        super(MyModel, self).__init__()
         self.vgg16_model = self.load_vgg()
-
         self.conv_test = Conv2D(filters=n_class, kernel_size=(1, 1))
         self.deconv_test = Conv2DTranspose(filters=n_class,
                                            kernel_size=(64, 64),
@@ -38,17 +39,40 @@ class MyModel(tf.keras.Model):
                                            padding='same',
                                            activation='sigmoid',
                                            kernel_initializer=Constant(bilinear_upsample_weights(32, n_class)))
+        self.build(self.vgg16_model.input_shape)
 
-    def call(self, input):
-      x = self.vgg16_model(input)
-      x = self.conv_test(x)
-      x = self.deconv_test(x)
-      return x
+    def call(self, inputs, training=None, mask=None):
+        x = self.vgg16_model(inputs)
+        x = self.conv_test(x)
+        x = self.deconv_test(x)
+        return x
 
-    def load_vgg(self):
+    @staticmethod
+    def load_vgg():
         # 加载vgg16模型，其中注意input_tensor，include_top
         vgg16_model = tf.keras.applications.vgg16.VGG16(
             weights='imagenet', include_top=False, input_tensor=Input(shape=(image_shape[0], image_shape[1], 3)))
         for layer in vgg16_model.layers[:15]:
-          layer.trainable = False
+            layer.trainable = False
         return vgg16_model
+
+
+def new_my_model(n_class=2):
+    vgg_model = tf.keras.applications.vgg16.VGG16(
+        weights='imagenet',
+        include_top=False,
+        input_tensor=Input(shape=(image_shape[0], image_shape[1], 3))
+    )
+    conv_test = Conv2D(filters=n_class, kernel_size=(1, 1))
+    deconv_test = Conv2DTranspose(
+        filters=n_class,
+        kernel_size=(64, 64),
+        strides=(32, 32),
+        padding='same',
+        activation='sigmoid',
+        kernel_initializer=Constant(bilinear_upsample_weights(32, n_class))
+    )
+    x = conv_test(vgg_model.output)
+    x = deconv_test(x)
+    new_model = Model(inputs=vgg_model.input, outputs=x)
+    return new_model
