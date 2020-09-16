@@ -4,3 +4,4 @@ logs/
 weights/
 models/
 result/
+__pycache__/

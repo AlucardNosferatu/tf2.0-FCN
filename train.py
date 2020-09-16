@@ -35,20 +35,22 @@ def build_model():
         metrics=['accuracy']
     )
     model.summary()
-    model.save('models/initial.h5')
+    model.save('models/LCD/initial.h5')
     return model
 
 
 def train_model():
-    if os.path.exists('models/initial.h5'):
+    if os.path.exists('models/LCD/initial.h5'):
         model = tf.keras.models.load_model(
-            'models/initial.h5',
+            'models/LCD/initial.h5',
             custom_objects={
                 'softmax_cross_entropy_with_logits_v2':tf.compat.v2.nn.softmax_cross_entropy_with_logits
             }
         )
     else:
         model = build_model()
+    if os.path.exists(weight_path + 'fcn_20191021.ckpt.index'):
+        model.load_weights(weight_path + 'fcn_20191021.ckpt')
     checkpoint = tf.keras.callbacks.ModelCheckpoint(
         weight_path + 'fcn_20191021.ckpt',
         monitor='loss',

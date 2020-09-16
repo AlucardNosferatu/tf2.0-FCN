@@ -51,7 +51,7 @@ class MyModel(Model):
     def load_vgg():
         # 加载vgg16模型，其中注意input_tensor，include_top
         vgg16_model = tf.keras.applications.vgg16.VGG16(
-            weights='imagenet', include_top=False, input_tensor=Input(shape=(image_shape[0], image_shape[1], 3)))
+            weights='imagenet', include_top=False, input_tensor=Input(shape=(image_shape[1], image_shape[0], 3)))
         for layer in vgg16_model.layers[:15]:
             layer.trainable = False
         return vgg16_model
@@ -61,7 +61,7 @@ def new_my_model(n_class=2):
     vgg_model = tf.keras.applications.vgg16.VGG16(
         weights='imagenet',
         include_top=False,
-        input_tensor=Input(shape=(image_shape[0], image_shape[1], 3))
+        input_tensor=Input(shape=(image_shape[1], image_shape[0], 3))
     )
     conv_test = Conv2D(filters=n_class, kernel_size=(1, 1))
     deconv_test = Conv2DTranspose(
