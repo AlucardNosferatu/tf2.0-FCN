@@ -5,7 +5,7 @@ from tensorflow.keras.layers import Conv2D, Conv2DTranspose
 from tensorflow.keras.layers import Input
 from tensorflow.keras import Model
 
-from config import image_shape
+from DL.config import image_shape
 
 
 # from tensorflow.nn import conv2d_transpose

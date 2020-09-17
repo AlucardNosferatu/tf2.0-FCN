@@ -5,10 +5,10 @@ import numpy as np
 import tensorflow as tf
 from PIL import Image
 
-from config import weight_path, test_dir, result_path
-from dataload import handle_data, train_label_filenames
-from model import new_my_model
-from train import activate_growth
+from DL.config import weight_path, test_dir, result_path
+from DL.dataload import handle_data, train_label_filenames
+from DL.model import new_my_model
+from DL.train import activate_growth
 
 COLORMAP = [[0, 0, 255], [0, 255, 0]]
 cm = np.array(COLORMAP).astype(np.uint8)

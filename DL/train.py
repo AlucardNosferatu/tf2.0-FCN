@@ -2,9 +2,9 @@ import os
 
 import tensorflow as tf
 
-from config import num_epochs, learning_rate, batch_size, weight_path, train_dir
-from dataload import train_generator
-from model import new_my_model
+from DL.config import num_epochs, learning_rate, batch_size, weight_path, train_dir
+from DL.dataload import train_generator
+from DL.model import new_my_model
 
 
 # 生成训练数据集
@@ -40,9 +40,9 @@ def build_model():
 
 
 def train_model():
-    if os.path.exists('models/LCD/initial.h5'):
+    if os.path.exists('../models/LCD/initial.h5'):
         model = tf.keras.models.load_model(
-            'models/LCD/initial.h5',
+            '../models/LCD/initial.h5',
             custom_objects={
                 'softmax_cross_entropy_with_logits_v2':tf.compat.v2.nn.softmax_cross_entropy_with_logits
             }

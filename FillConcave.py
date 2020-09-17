@@ -31,9 +31,9 @@ def batch_fill():
         print(file, 'Done')
 
 
-def check_result():
+def check_result(mask_path='result/LCD_Filled'):
     path1 = 'data/LCD/train/img'
-    path2 = 'result/LCD_Filled'
+    path2 = mask_path
     file_list = os.listdir(path2)
     for file in file_list:
         img2 = cv2.imread(os.path.join(path2, file))

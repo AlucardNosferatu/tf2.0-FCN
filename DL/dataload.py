@@ -3,7 +3,7 @@ import cv2
 import numpy as np
 import tensorflow as tf
 
-from config import image_shape, train_dir, train_label_dir, test_dir
+from DL.config import image_shape, train_dir, train_label_dir, test_dir
 
 train_list_dir = os.listdir(train_dir)
 train_list_dir.sort()
