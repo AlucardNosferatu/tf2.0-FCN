@@ -9,8 +9,7 @@ from Points2Area import Point, GetAreaOfPolyGon
 path = 'result/LCD_Filled/LCD (1).png'
 
 
-def fit_quad(path):
-    image = cv2.imread(path)
+def fit_array(image):
     thresh = cv2.Canny(image, 200, 100)
     contours, hierachy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     areas = []
@@ -35,6 +34,12 @@ def fit_quad(path):
     image = np.zeros_like(image).astype(np.uint8)
     # image = cv2.drawContours(image, [cnt], -1, (255, 255, 255), 1)
     image = cv2.fillPoly(image, [cnt], (255, 255, 255))
+    return image
+
+
+def fit_quad(path):
+    image = cv2.imread(path)
+    image = fit_array(image)
     new_path = path.replace('LCD_Filled', 'LCD_Fitted')
     cv2.imwrite(new_path, image)
 

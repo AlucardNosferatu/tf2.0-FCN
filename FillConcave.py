@@ -3,23 +3,19 @@ import cv2
 import numpy as np
 
 
-def fill_concave(path):
-    image = cv2.imread(path)
+def fill_array(image):
     thresh = cv2.Canny(image, 200, 100)
     contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     image = cv2.drawContours(image, contours, -1, (255, 0, 0), 1)
     for cnt in contours:
         hull = cv2.convexHull(cnt)
-        # length = len(hull)
-        # for i in range(length):
-        #     image = cv2.line(
-        #         image,
-        #         tuple(hull[i][0]),
-        #         tuple(hull[(i + 1) % length][0]),
-        #         (0, 0, 255),
-        #         2
-        #     )
         image = cv2.fillPoly(image, [hull], (255, 255, 255))
+    return image
+
+
+def fill_concave(path):
+    image = cv2.imread(path)
+    image = fill_array(image)
     cv2.imwrite(path.replace('result/LCD', 'result/LCD_Filled'), image)
 
 

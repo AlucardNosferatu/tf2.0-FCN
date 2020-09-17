@@ -9,10 +9,16 @@ from DL.config import weight_path, test_dir, result_path
 from DL.dataload import handle_data, train_label_filenames
 from DL.model import new_my_model
 from DL.train import activate_growth
+from FillConcave import fill_array
+from FitQuad import fit_array
 
 COLORMAP = [[0, 0, 255], [0, 255, 0]]
 cm = np.array(COLORMAP).astype(np.uint8)
 cm2 = np.array([[0, 0, 0], [255, 255, 255]]).astype(np.uint8)
+
+test_list_dir = os.listdir(test_dir)
+test_list_dir.sort()
+test_filenames = [test_dir + filename for filename in test_list_dir]
 
 
 def addweight(pred, test_img):
@@ -27,13 +33,15 @@ def addweight(pred, test_img):
     return image
 
 
-def write_pred(image, pred):
+def transform_out(pred):
     pred = pred[0]  # pred维度为[h, w, n_class]
     pred = np.argmax(pred, axis=2)  # 获取通道的最大值的指数，比如模型输出某点的像素值为[0.1,0.5]，则该点的argmax为1.
-    # pred = cm[pred]  # 将预测结果的像素值改为cm定义的值，这是语义分割常用方法。这一步是为了将上一步的1转换为cm的第二个值，即[0,255,0]
     pred = cm2[pred]
-    # weighted_pred = addweight(pred, image)
-    # weighted_pred.save(os.path.join(result_path, filename.split("/")[-1]))
+    return pred
+
+
+def write_pred(pred, filename):
+    pred = transform_out(pred)
     cv2.imwrite(os.path.join(result_path, filename.split("/")[-1]), pred)
     print(filename.split("/")[-1] + " finished")
 
@@ -44,15 +52,32 @@ def load_model():
     return model
 
 
-test_list_dir = os.listdir(test_dir)
-test_list_dir.sort()
-test_filenames = [test_dir + filename for filename in test_list_dir]
-
-activate_growth()
-model = load_model()
-for i, filename in enumerate(test_filenames):
-    image, gt_label = handle_data(train_filenames=filename, train_label_filenames=train_label_filenames[i])
+def test_array(model, image):
     image = image[np.newaxis, :, :, :].astype("float32")
     with tf.device('/gpu:0'):
         out = model.predict(image)  # out的维度为[batch, h, w, n_class]
-        write_pred(image, out)
+        out = transform_out(out)
+        out = fill_array(out)
+        out = fit_array(out)
+        image = cv2.cvtColor(image[0], cv2.COLOR_RGB2BGR)
+        img = (out * 0.3 + image * 0.7).astype(np.uint8)
+        return img
+
+
+def test_file():
+    activate_growth()
+    model = load_model()
+    for i, filename in enumerate(test_filenames):
+        image = handle_data(train_filenames=filename)
+        img = test_array(model, image)
+        cv2.imshow('img', img)
+        cv2.waitKey()
+        cv2.waitKey(1)
+        # write_pred(out, filename)
+
+def test_cam():
+    activate_growth()
+    model = load_model()
+
+if __name__ == '__main__':
+    test_file()
