@@ -12,6 +12,7 @@ from train import activate_growth
 
 COLORMAP = [[0, 0, 255], [0, 255, 0]]
 cm = np.array(COLORMAP).astype(np.uint8)
+cm2 = np.array([[0, 0, 0], [255, 255, 255]]).astype(np.uint8)
 
 
 def addweight(pred, test_img):
@@ -29,11 +30,11 @@ def addweight(pred, test_img):
 def write_pred(image, pred):
     pred = pred[0]  # pred维度为[h, w, n_class]
     pred = np.argmax(pred, axis=2)  # 获取通道的最大值的指数，比如模型输出某点的像素值为[0.1,0.5]，则该点的argmax为1.
-    pred = cm[pred]  # 将预测结果的像素值改为cm定义的值，这是语义分割常用方法。这一步是为了将上一步的1转换为cm的第二个值，即[0,255,0]
-
-    weighted_pred = addweight(pred, image)
-    weighted_pred.save(os.path.join(result_path, filename.split("/")[-1]))
-    # cv2.imwrite(os.path.join(result_path, filename.split("/")[-1]), pred)
+    # pred = cm[pred]  # 将预测结果的像素值改为cm定义的值，这是语义分割常用方法。这一步是为了将上一步的1转换为cm的第二个值，即[0,255,0]
+    pred = cm2[pred]
+    # weighted_pred = addweight(pred, image)
+    # weighted_pred.save(os.path.join(result_path, filename.split("/")[-1]))
+    cv2.imwrite(os.path.join(result_path, filename.split("/")[-1]), pred)
     print(filename.split("/")[-1] + " finished")
 
 
