@@ -5,7 +5,7 @@ import numpy as np
 import tensorflow as tf
 from PIL import Image
 
-from DL.config import weight_path, test_dir, result_path
+from DL.config import weight_path, test_dir, result_path, image_shape
 from DL.dataload import handle_data, train_label_filenames
 from DL.model import new_my_model
 from DL.train import activate_growth
@@ -75,9 +75,23 @@ def test_file():
         cv2.waitKey(1)
         # write_pred(out, filename)
 
+
 def test_cam():
     activate_growth()
     model = load_model()
+    sample = cv2.VideoCapture(0 + cv2.CAP_DSHOW)
+    while sample.isOpened():
+        ret, img = sample.read()
+        if img is not None:
+            img = cv2.resize(img, image_shape)
+            img_yuv = cv2.cvtColor(img, cv2.COLOR_BGR2YUV)
+            img_yuv[:, :, 0] = cv2.equalizeHist(img_yuv[:, :, 0])
+            img = cv2.cvtColor(img_yuv, cv2.COLOR_YUV2RGB)
+            image = test_array(model, img)
+            cv2.imshow('img', image)
+            # cv2.waitKey()
+            cv2.waitKey(1)
+
 
 if __name__ == '__main__':
-    test_file()
+    test_cam()
